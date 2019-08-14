@@ -328,12 +328,12 @@ public class RxPermissions {
     }
 
     /**
-     * 判断是否需要显示申请权限的缘由
+     * 判断是否权限是否被用户勾选了不再提示
      */
     @TargetApi(Build.VERSION_CODES.M)
     private boolean shouldShowRequestPermissionRationaleImplementation(final Activity activity, final String... permissions) {
         for (String permission : permissions) {
-            //没有允许，并且需要显示申请权限缘由，出现一个需要则返回为
+            //没有允许，如果用户勾选了不再提示shouldShowRequestPermissionRationale会返回false
             if (!isGranted(permission) && !activity.shouldShowRequestPermissionRationale(permission)) {
                 return false;
             }

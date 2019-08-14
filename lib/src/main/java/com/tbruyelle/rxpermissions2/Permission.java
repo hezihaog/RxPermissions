@@ -20,7 +20,7 @@ public class Permission {
      */
     public final boolean granted;
     /**
-     * 是否需要展示权限申请缘由
+     * 是否被用户勾选了不再提示
      */
     public final boolean shouldShowRequestPermissionRationale;
 
@@ -117,10 +117,10 @@ public class Permission {
     }
 
     /**
-     * 判断权限列表中是否有一项需要显示缘由
+     * 判断权限列表中是否有一项被勾选了不再提示
      *
      * @param permissions 权限列表
-     * @return true则表示有一项需要显示缘由，false则没有一项需要显示缘由
+     * @return true则表示有一项被勾选了不再提示，false则没有一项被勾选了不再提示
      */
     private Boolean combineShouldShowRequestPermissionRationale(List<Permission> permissions) {
         return Observable.fromIterable(permissions)

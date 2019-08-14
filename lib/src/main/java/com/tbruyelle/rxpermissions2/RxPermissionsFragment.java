@@ -40,7 +40,7 @@ public class RxPermissionsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //保持实例不销毁
+        //保持实例，避免屏幕旋转时，重建Fragment实例
         setRetainInstance(true);
     }
 
@@ -84,7 +84,7 @@ public class RxPermissionsFragment extends Fragment {
      *
      * @param permissions                          权限列表
      * @param grantResults                         申请结果
-     * @param shouldShowRequestPermissionRationale 是否显示权限缘由列表
+     * @param shouldShowRequestPermissionRationale 是否被用户勾选了不再提示
      */
     void onRequestPermissionsResult(String[] permissions, int[] grantResults, boolean[] shouldShowRequestPermissionRationale) {
         for (int i = 0, size = permissions.length; i < size; i++) {
