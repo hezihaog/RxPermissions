@@ -51,6 +51,7 @@ public class RxPermissionsFragment extends Fragment {
      */
     @TargetApi(Build.VERSION_CODES.M)
     void requestPermissions(@NonNull String[] permissions) {
+        //调用系统的申请权限API
         requestPermissions(permissions, PERMISSIONS_REQUEST_CODE);
     }
 
@@ -142,6 +143,11 @@ public class RxPermissionsFragment extends Fragment {
         mLogging = logging;
     }
 
+    /**
+     * 以权限名找回权限数据源存根
+     *
+     * @param permission 目标权限
+     */
     public PublishSubject<Permission> getSubjectByPermission(@NonNull String permission) {
         return mSubjects.get(permission);
     }

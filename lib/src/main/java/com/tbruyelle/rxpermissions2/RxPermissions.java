@@ -38,10 +38,10 @@ public class RxPermissions {
     /**
      * 用于发起Rx数据源的空对象
      */
-    static final Object TRIGGER = new Object();
+    private static final Object TRIGGER = new Object();
 
     /**
-     * 权限申请代理Fragment
+     * 权限申请代理Fragment懒加载和缓存
      */
     @VisibleForTesting
     Lazy<RxPermissionsFragment> mRxPermissionsFragment;
@@ -141,9 +141,9 @@ public class RxPermissions {
                                     return Observable.empty();
                                 }
                                 //所有权限都允许了，才返回true
-                                for (Permission p : permissions) {
+                                for (Permission permission : permissions) {
                                     //是要有一个没有授权，则返回false
-                                    if (!p.granted) {
+                                    if (!permission.granted) {
                                         return Observable.just(false);
                                     }
                                 }
@@ -227,7 +227,7 @@ public class RxPermissions {
     }
 
     /**
-     * 这个request中转很奇怪
+     * 申请权限request中转
      *
      * @param trigger     原始数据源
      * @param permissions 申请的权限
@@ -236,11 +236,12 @@ public class RxPermissions {
         if (permissions == null || permissions.length == 0) {
             throw new IllegalArgumentException("RxPermissions.request/requestEach requires at least one input permission");
         }
+        //数据源一一匹配，确保是成对存在
         return oneOf(trigger, pending(permissions))
                 .flatMap(new Function<Object, Observable<Permission>>() {
                     @Override
                     public Observable<Permission> apply(Object o) {
-                        //真正申请权限的实现
+                        //真正申请权限的实现，每个权限都一个个去申请
                         return requestImplementation(permissions);
                     }
                 });
@@ -252,8 +253,8 @@ public class RxPermissions {
      * @param permissions 申请的权限
      */
     private Observable<?> pending(final String... permissions) {
-        for (String p : permissions) {
-            if (!mRxPermissionsFragment.get().containsByPermission(p)) {
+        for (String permission : permissions) {
+            if (!mRxPermissionsFragment.get().containsByPermission(permission)) {
                 return Observable.empty();
             }
         }
@@ -261,7 +262,7 @@ public class RxPermissions {
     }
 
     /**
-     * 合并数据源数据
+     * 数据源一一匹配，确保是成对存在
      */
     private Observable<?> oneOf(Observable<?> trigger, Observable<?> pending) {
         if (trigger == null) {
@@ -281,16 +282,15 @@ public class RxPermissions {
         List<Observable<Permission>> list = new ArrayList<>(permissions.length);
         //待申请的权限列表
         List<String> unrequestedPermissions = new ArrayList<>();
-
         //为每个权限创建一个数据源
         for (String permission : permissions) {
             mRxPermissionsFragment.get().log("Requesting permission " + permission);
-            //因为需要申请的权限是固定，这里过滤掉已经允许的权限或者不是运行6.0系统
+            //加入已经被允许的权限数据源
             if (isGranted(permission)) {
                 list.add(Observable.just(new Permission(permission, true, false)));
                 continue;
             }
-            //被拒绝的权限
+            //加入被拒绝的权限的数据源
             if (isRevoked(permission)) {
                 list.add(Observable.just(new Permission(permission, false, false)));
                 continue;
@@ -304,13 +304,14 @@ public class RxPermissions {
                 subject = PublishSubject.create();
                 mRxPermissionsFragment.get().setSubjectForPermission(permission, subject);
             }
+            //加入待进行申请的权限数据源
             list.add(subject);
         }
         //如果存在需要申请的权限，则申请权限
         if (!unrequestedPermissions.isEmpty()) {
             //集合转为数组
             String[] unrequestedPermissionsArray = unrequestedPermissions.toArray(new String[unrequestedPermissions.size()]);
-            //调用代理Fragment的申请方法
+            //调用代理Fragment去申请权限
             requestPermissionsFromFragment(unrequestedPermissionsArray);
         }
         //发射允许和被拒绝的权限，concat顺序发送权限结果数据源，将他们的结果按顺序铺平发送
@@ -331,15 +332,20 @@ public class RxPermissions {
      */
     @TargetApi(Build.VERSION_CODES.M)
     private boolean shouldShowRequestPermissionRationaleImplementation(final Activity activity, final String... permissions) {
-        for (String p : permissions) {
+        for (String permission : permissions) {
             //没有允许，并且需要显示申请权限缘由，出现一个需要则返回为
-            if (!isGranted(p) && !activity.shouldShowRequestPermissionRationale(p)) {
+            if (!isGranted(permission) && !activity.shouldShowRequestPermissionRationale(permission)) {
                 return false;
             }
         }
         return true;
     }
 
+    /**
+     * 调用申请权限的代理Fragment申请权限
+     *
+     * @param permissions 目标权限列表
+     */
     @TargetApi(Build.VERSION_CODES.M)
     void requestPermissionsFromFragment(String[] permissions) {
         mRxPermissionsFragment.get().log("requestPermissionsFromFragment " + TextUtils.join(", ", permissions));
