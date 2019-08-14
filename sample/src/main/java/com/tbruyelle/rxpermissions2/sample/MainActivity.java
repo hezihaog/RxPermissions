@@ -19,7 +19,6 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
-
     private static final String TAG = "RxPermissionsSample";
 
     private Camera camera;
@@ -35,13 +34,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.act_main);
         surfaceView = findViewById(R.id.surfaceView);
 
+        //申请权限
         disposable = RxView.clicks(findViewById(R.id.enableCamera))
-                // Ask for permissions when button is clicked
                 .compose(rxPermissions.ensureEach(permission.CAMERA))
                 .subscribe(new Consumer<Permission>() {
                                @Override
                                public void accept(Permission permission) {
+                                   //申请结果
                                    Log.i(TAG, "Permission result " + permission);
+                                   //允许权限
                                    if (permission.granted) {
                                        releaseCamera();
                                        camera = Camera.open(0);
@@ -52,13 +53,12 @@ public class MainActivity extends AppCompatActivity {
                                            Log.e(TAG, "Error while trying to display the camera preview", e);
                                        }
                                    } else if (permission.shouldShowRequestPermissionRationale) {
-                                       // Denied permission without ask never again
+                                       //设置了不再允许
                                        Toast.makeText(MainActivity.this,
                                                "Denied permission without ask never again",
                                                Toast.LENGTH_SHORT).show();
                                    } else {
-                                       // Denied permission with ask never again
-                                       // Need to go to the settings
+                                       //拒绝权限
                                        Toast.makeText(MainActivity.this,
                                                "Permission denied, can't enable the camera",
                                                Toast.LENGTH_SHORT).show();
@@ -68,12 +68,14 @@ public class MainActivity extends AppCompatActivity {
                         new Consumer<Throwable>() {
                             @Override
                             public void accept(Throwable t) {
+                                //申请异常
                                 Log.e(TAG, "onError", t);
                             }
                         },
                         new Action() {
                             @Override
                             public void run() {
+                                //申请结束
                                 Log.i(TAG, "OnComplete");
                             }
                         });
@@ -99,5 +101,4 @@ public class MainActivity extends AppCompatActivity {
             camera = null;
         }
     }
-
 }

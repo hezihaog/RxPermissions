@@ -4,7 +4,7 @@
 
 This library allows the usage of RxJava with the new Android M permission model.
 
-## Setup
+## 配置
 
 To use this library your `minSdkVersion` must be >= 11.
 
@@ -21,7 +21,7 @@ dependencies {
 }
 ```
 
-## Usage
+## 使用
 
 Create a `RxPermissions` instance :
 
